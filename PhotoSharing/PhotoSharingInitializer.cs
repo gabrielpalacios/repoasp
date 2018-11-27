@@ -16,6 +16,14 @@ namespace PhotoSharing
             };
             context.Photos.Add(a1);
             context.SaveChanges();
+
+            Comment c1 = new Comment
+            {
+                Subject = "hol<",
+                Photo = a1
+            };
+            context.Comments.Add(c1);
+            context.SaveChanges();
         }
 
     }
