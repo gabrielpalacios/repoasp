@@ -156,7 +156,7 @@
     <Compile Include="Models\Comment.cs" />
     <Compile Include="Models\Photo.cs" />
     <Compile Include="Models\PhotoSharingContext.cs" />
-    <Compile Include="PhotoSharingInitializer.cs" />
+    <Compile Include="Models\PhotoSharingInitializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
