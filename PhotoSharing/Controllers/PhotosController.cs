@@ -12,22 +12,46 @@ namespace PhotoSharing.Controllers
 {
     public class PhotosController : Controller
     {
-        private PhotoSharingContext db = new PhotoSharingContext();
+        private PhotoSharingContext context = new PhotoSharingContext();
 
         // GET: Photos
         public ActionResult Index()
         {
-            return View(db.Photos.ToList());
+            return View(context.Photos.ToList());
         }
 
-        // GET: Photos/Details/5
-        public ActionResult Details(int? id)
+        public ActionResult Display(int id)
+        {
+            Photo photo = context.Photos.Find(id);
+            if (photo == null)
+            {
+                return HttpNotFound();
+            }
+            return View("Display", photo);
+        }
+
+        public FileContentResult GetImage(int id)
+        {
+            Photo photo = context.Photos.Find(id);
+            if (photo != null)
+            {
+                return File(photo.File, photo.MimeType);
+            }
+            else
+            {
+                return null;
+            }
+        }
+    
+
+    // GET: Photos/Details/5
+    public ActionResult Details(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Photo photo = db.Photos.Find(id);
+            Photo photo = context.Photos.Find(id);
             if (photo == null)
             {
                 return HttpNotFound();
@@ -38,24 +62,37 @@ namespace PhotoSharing.Controllers
         // GET: Photos/Create
         public ActionResult Create()
         {
-            return View();
+            Photo photo = new Photo
+            {
+                CreateDate = DateTime.Today
+            };
+
+            return View("Create", photo);
         }
 
         // POST: Photos/Create
         // Para protegerse de ataques de publicación excesiva, habilite las propiedades específicas a las que desea enlazarse. Para obtener 
         // más información vea https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,Title,File,MimeType,Description,Username,CreateDate")] Photo photo)
+        public ActionResult Create(Photo photo, HttpPostedFileBase image)
         {
-            if (ModelState.IsValid)
+            photo.CreateDate = DateTime.Today;
+            if (!ModelState.IsValid)
             {
-                db.Photos.Add(photo);
-                db.SaveChanges();
+                return View("Create", photo);
+            }
+            else
+            {
+                if (image != null)
+                {
+                    photo.MimeType = image.ContentType;
+                    photo.File = new byte[image.ContentLength];
+                    image.InputStream.Read(photo.File, 0, image.ContentLength);
+                }
+                context.Photos.Add(photo);
+                context.SaveChanges();
                 return RedirectToAction("Index");
             }
-
-            return View(photo);
         }
 
         // GET: Photos/Edit/5
@@ -65,7 +102,7 @@ namespace PhotoSharing.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Photo photo = db.Photos.Find(id);
+            Photo photo = context.Photos.Find(id);
             if (photo == null)
             {
                 return HttpNotFound();
@@ -82,8 +119,8 @@ namespace PhotoSharing.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(photo).State = EntityState.Modified;
-                db.SaveChanges();
+                context.Entry(photo).State = EntityState.Modified;
+                context.SaveChanges();
                 return RedirectToAction("Index");
             }
             return View(photo);
@@ -96,7 +133,7 @@ namespace PhotoSharing.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Photo photo = db.Photos.Find(id);
+            Photo photo = context.Photos.Find(id);
             if (photo == null)
             {
                 return HttpNotFound();
@@ -109,9 +146,9 @@ namespace PhotoSharing.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Photo photo = db.Photos.Find(id);
-            db.Photos.Remove(photo);
-            db.SaveChanges();
+            Photo photo = context.Photos.Find(id);
+            context.Photos.Remove(photo);
+            context.SaveChanges();
             return RedirectToAction("Index");
         }
 
@@ -119,9 +156,11 @@ namespace PhotoSharing.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                context.Dispose();
             }
             base.Dispose(disposing);
         }
+
+   
     }
 }
